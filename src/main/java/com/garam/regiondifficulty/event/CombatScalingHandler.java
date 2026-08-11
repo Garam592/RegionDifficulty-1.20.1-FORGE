@@ -12,18 +12,17 @@ import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * Runtime combat damage scaling based on regional difficulty.
+ * 基于区域难度的运行时战斗伤害缩放。
  *
- * <p>Hooks {@link LivingHurtEvent} at LOW priority (post-armor calculation) to scale
- * the final damage amount based on the regional difficulty multiplier at the relevant
- * entity's position.</p>
+ * <p>在{@link LivingHurtEvent}的LOW优先级（护甲计算之后）挂钩，
+ * 根据相关实体所在位置的区域难度乘数来缩放最终伤害值。</p>
  *
- * <p>Two directions (independently configurable):</p>
+ * <p>两个方向（可独立配置）：</p>
  * <ul>
- *   <li><b>Damage TO player</b>: scaled by the attacker's regional difficulty.
- *       Monsters from hard regions hit harder.</li>
- *   <li><b>Damage BY player</b>: scaled by the target's regional difficulty.
- *       Monsters in hard regions are tougher (reduced player damage).</li>
+ *   <li><b>对玩家造成的伤害</b>：按攻击者所在区域的难度进行缩放。
+ *       高难度区域的怪物造成更高伤害。</li>
+ *   <li><b>玩家造成的伤害</b>：按目标所在区域的难度进行缩放。
+ *       高难度区域的怪物更耐打（降低玩家造成的伤害）。</li>
  * </ul>
  */
 @Mod.EventBusSubscriber(modid = "region_difficulty", bus = Mod.EventBusSubscriber.Bus.FORGE)
@@ -34,7 +33,7 @@ public class CombatScalingHandler {
         if (!Config.combatScalingEnabled) return;
         if (event.getAmount() <= 0.0F) return;
 
-        // Damage TO player: scale by attacker's regional difficulty
+        // 对玩家造成的伤害：按攻击者所在区域的难度进行缩放
         if (Config.combatToPlayerEnabled && event.getEntity() instanceof Player) {
             if (event.getSource().getEntity() instanceof LivingEntity) {
                 LivingEntity attacker = (LivingEntity) event.getSource().getEntity();
@@ -52,7 +51,7 @@ public class CombatScalingHandler {
             }
         }
 
-        // Damage BY player: scale by target's regional difficulty
+        // 玩家造成的伤害：按目标所在区域的难度进行缩放
         if (Config.combatByPlayerEnabled
                 && event.getSource().getEntity() instanceof Player
                 && event.getEntity() instanceof LivingEntity) {
@@ -71,7 +70,7 @@ public class CombatScalingHandler {
     }
 
     /**
-     * Compute the regional difficulty multiplier at the entity's current position.
+     * 计算实体当前位置的区域难度乘数。
      */
     private static float computeMultiplierAt(LivingEntity entity) {
         if (!(entity.level() instanceof net.minecraft.world.level.ServerLevelAccessor serverLevel)) {

@@ -10,21 +10,20 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Parses and stores spawn-gating rules: which mob types are allowed in which
- * regional difficulty multiplier ranges.
+ * 解析并存储生成门控规则：哪些生物类型在哪些区域难度倍率范围内允许生成。
  *
- * <p>Config format: {@code "namespace:path=min,max"} where min and/or max can be empty.
- * Examples:</p>
+ * <p>配置格式：{@code "namespace:path=min,max"}，其中 min 和/或 max 可以为空。
+ * 示例：</p>
  * <ul>
- *   <li>{@code "minecraft:wither_skeleton=2.0,"} — requires multiplier ≥ 2.0</li>
- *   <li>{@code "minecraft:bat=,0.5"} — only allowed at multiplier ≤ 0.5</li>
- *   <li>{@code "minecraft:creeper=1.5,3.0"} — requires 1.5 ≤ multiplier ≤ 3.0</li>
+ *   <li>{@code "minecraft:wither_skeleton=2.0,"} — 需要倍率 ≥ 2.0</li>
+ *   <li>{@code "minecraft:bat=,0.5"} — 仅在倍率 ≤ 0.5 时允许</li>
+ *   <li>{@code "minecraft:creeper=1.5,3.0"} — 需要 1.5 ≤ 倍率 ≤ 3.0</li>
  * </ul>
  */
 @SuppressWarnings("deprecation")
 public class SpawnGateRules {
 
-    /** A numeric range rule: [minMultiplier, maxMultiplier] inclusive. */
+    /** 数值范围规则：[minMultiplier, maxMultiplier] 闭区间。 */
     public record SpawnRule(float minMultiplier, float maxMultiplier) {
         public SpawnRule {
             if (minMultiplier < 0.0F) minMultiplier = 0.0F;
@@ -46,7 +45,7 @@ public class SpawnGateRules {
     }
 
     /**
-     * Build a SpawnGateRules instance from the current Config values.
+     * 根据当前配置值构建 SpawnGateRules 实例。
      */
     public static SpawnGateRules fromConfig() {
         Map<EntityType<?>, SpawnRule> map = new HashMap<>();
@@ -60,7 +59,7 @@ public class SpawnGateRules {
     }
 
     /**
-     * Check whether a mob type is allowed to spawn at the given regional multiplier.
+     * 检查某个生物类型在给定的区域倍率下是否允许生成。
      */
     public boolean isSpawnAllowed(EntityType<?> type, float multiplier) {
         SpawnRule rule = rules.get(type);
@@ -71,7 +70,7 @@ public class SpawnGateRules {
     }
 
     /**
-     * Parse a single "namespace:path=min,max" entry and add it to the map.
+     * 解析单条 "namespace:path=min,max" 条目并将其添加到映射中。
      */
     private static void parseEntry(String entry, Map<EntityType<?>, SpawnRule> map) {
         String[] parts = entry.split("=", 2);
@@ -117,7 +116,7 @@ public class SpawnGateRules {
     }
 
     /**
-     * Number of rules currently loaded (for debugging).
+     * 当前已加载的规则数量（用于调试）。
      */
     public int size() {
         return rules.size();

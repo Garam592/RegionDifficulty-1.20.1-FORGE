@@ -12,17 +12,17 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Applies region-difficulty-scaled {@link AttributeModifier}s to living entities at spawn.
+ * 在生物生成时，将区域难度缩放的{@link AttributeModifier}应用到生物实体上。
  *
- * <p>Each attribute type uses a fixed UUID so re-application on the same entity replaces
- * the previous modifier rather than stacking. The operation is {@code MULTIPLY_BASE}:</p>
- * <pre>finalValue = baseValue * (1 + (multiplier - 1) * intensity)</pre>
+ * <p>每种属性类型使用固定的UUID，因此对同一实体的重复应用会替换先前的修改器而不会叠加。
+ * 运算方式为{@code MULTIPLY_BASE}：</p>
+ * <pre>最终值 = 基础值 * (1 + (乘数 - 1) * 强度)</pre>
  */
 public final class AttributeApplier {
 
-    private AttributeApplier() {} // utility class
+    private AttributeApplier() {} // 工具类
 
-    // Fixed UUIDs — one per attribute, shared across all entities
+    // 固定UUID —— 每种属性一个，所有实体共享
     private static final UUID UUID_HEALTH        = UUID.fromString("a1b2c3d4-1001-4000-8000-000000000001");
     private static final UUID UUID_ATTACK_DAMAGE = UUID.fromString("a1b2c3d4-1001-4000-8000-000000000002");
     private static final UUID UUID_MOVEMENT_SPEED = UUID.fromString("a1b2c3d4-1001-4000-8000-000000000003");
@@ -33,34 +33,33 @@ public final class AttributeApplier {
     private static final UUID UUID_REINFORCEMENTS = UUID.fromString("a1b2c3d4-1001-4000-8000-000000000008");
 
     /**
-     * Descriptor for one attribute target: which attribute, which UUID, whether enabled,
-     * and what intensity to apply.
+     * 属性目标描述符：包含目标属性、对应UUID、是否启用以及应用的强度。
      */
     private record AttrTarget(Attribute attribute, UUID uuid,
                                boolean enabled, double intensity) {}
 
-    /** Lazily-built set of excluded mob type registry names (lowercased). */
+    /** 延迟构建的排除生物类型注册名集合（已转为小写）。 */
     private static volatile Set<String> excludedMobIds = null;
 
-    // ========== Public API ==========
+    // ========== 公共API ==========
 
     /**
-     * Apply all enabled region-difficulty attribute modifiers to the given entity.
+     * 将所有已启用的区域难度属性修改器应用到给定的实体上。
      *
-     * @param entity     the spawned mob (non-player living entity)
-     * @param multiplier the regional difficulty multiplier (1.0 = neutral)
+     * @param entity     生成的生物（非玩家的生物实体）
+     * @param multiplier 区域难度乘数（1.0 = 无变化）
      */
     public static void apply(LivingEntity entity, float multiplier) {
         if (!Config.spawnAttributesEnabled) return;
         if (Math.abs(multiplier - 1.0F) < 0.0001F) return;
 
-        // Check exclusion list
+        // 检查排除列表
         if (isExcluded(entity)) return;
 
-        // Effective multiplier clamped to safe range
+        // 将有效乘数限制在安全范围内
         float effectiveMult = Math.max(0.1F, Math.min(10.0F, multiplier));
 
-        // Build target list from current config (fast, config fields are primitives)
+        // 从当前配置构建目标列表（快速，配置字段为基本类型）
         AttrTarget[] targets = buildTargets();
         boolean healthModified = false;
 
@@ -71,10 +70,10 @@ public final class AttributeApplier {
             if (instance == null) continue;
 
             double amount = (effectiveMult - 1.0) * target.intensity;
-            // Clamp to prevent attributes going negative
+            // 限制以防止属性变为负数
             if (amount <= -1.0) amount = -0.99;
 
-            // Remove any existing modifier with the same UUID (idempotent)
+            // 移除任何具有相同UUID的现有修改器（幂等操作）
             instance.removeModifier(target.uuid);
 
             AttributeModifier modifier = new AttributeModifier(
@@ -90,15 +89,15 @@ public final class AttributeApplier {
             }
         }
 
-        // Ensure spawned mob has full health after max health scaling
+        // 确保生成的生物在最大生命值缩放后拥有满血状态
         if (healthModified) {
             entity.setHealth(entity.getMaxHealth());
         }
     }
 
     /**
-     * Remove all region-difficulty modifiers from an entity.
-     * Useful for mob types that should not be affected.
+     * 从实体上移除所有区域难度修改器。
+     * 对于不应受影响的生物类型很有用。
      */
     public static void removeAll(LivingEntity entity) {
         Attribute[] attrs = {
@@ -119,10 +118,10 @@ public final class AttributeApplier {
         }
     }
 
-    // ========== Internal ==========
+    // ========== 内部方法 ==========
 
     /**
-     * Build the list of attribute targets from current Config values.
+     * 从当前Config值构建属性目标列表。
      */
     private static AttrTarget[] buildTargets() {
         return new AttrTarget[] {
@@ -146,7 +145,7 @@ public final class AttributeApplier {
     }
 
     /**
-     * Check whether an entity type is in the exclusion list.
+     * 检查实体类型是否在排除列表中。
      */
     private static boolean isExcluded(LivingEntity entity) {
         Set<String> excluded = excludedMobIds;
@@ -163,7 +162,7 @@ public final class AttributeApplier {
     }
 
     /**
-     * Clear the excluded mobs cache so it's rebuilt from config on next use.
+     * 清除排除生物缓存，使其在下次使用时从配置重新构建。
      */
     public static void refreshExcludedMobs() {
         excludedMobIds = null;
