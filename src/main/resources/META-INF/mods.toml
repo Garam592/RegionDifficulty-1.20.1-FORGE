@@ -42,7 +42,8 @@ authors="${mod_authors}" #optional
 #displayTest="MATCH_VERSION" # if nothing is specified, MATCH_VERSION is the default when clientSideOnly=false, otherwise IGNORE_ALL_VERSION when clientSideOnly=true (#optional)
 
 # The description text for the mod (multi line!) (#mandatory)
-description='''${mod_description}'''
+description='''本模组旨在翻新原版的”区域难度“机制，让区域难度可以根据群系，维度，结构，甚至是深度等因素进行变化，同时让区域难度可以确切影响怪物血量，怪物类型等等。
+初代测试版（alpha）'''
 # A dependency - use the . to indicate dependency for a specific modid. Dependencies are optional.
 [[dependencies.${mod_id}]] #optional
     # the modid of the dependency

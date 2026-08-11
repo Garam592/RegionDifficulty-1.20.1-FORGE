@@ -19,20 +19,20 @@ import net.minecraftforge.fml.common.Mod;
 import org.slf4j.Logger;
 
 /**
- * Intercepts mob spawn finalization to replace the vanilla DifficultyInstance
- * with a regionally-enhanced one that accounts for biome, structure, dimension, and depth.
+ * 拦截生物生成完成事件，用区域增强的DifficultyInstance替换原版的DifficultyInstance，
+ * 该增强实例会考虑生物群系、结构、维度和深度等因素。
  */
 @Mod.EventBusSubscriber(modid = "region_difficulty", bus = Mod.EventBusSubscriber.Bus.FORGE)
 public class DifficultyEventHandler {
 
     private static final Logger LOGGER = LogUtils.getLogger();
 
-    /** Thread-safe cached multiplier table, refreshed on config load/reload. */
+    /** 线程安全的缓存乘数表，在配置加载/重载时刷新。 */
     private static volatile DifficultyMultipliers cachedMultipliers = null;
 
     /**
-     * Force a refresh of the cached multiplier table from current Config values.
-     * Called from the mod constructor on config load/reload events.
+     * 强制从当前Config值刷新缓存的乘数表。
+     * 在模组构造函数中由配置加载/重载事件调用。
      */
     public static synchronized void refreshMultipliers() {
         cachedMultipliers = DifficultyMultipliers.fromConfig();
@@ -42,9 +42,9 @@ public class DifficultyEventHandler {
     }
 
     /**
-     * Lazily initializes and returns the current multiplier table snapshot.
-     * Public so that other handlers (CombatScalingHandler, SpawnControlHandler)
-     * can use the same cached instance.
+     * 延迟初始化并返回当前的乘数表快照。
+     * 设为public以便其他处理器（CombatScalingHandler、SpawnControlHandler）
+     * 可以使用同一个缓存实例。
      */
     public static DifficultyMultipliers getMultipliersSnapshot() {
         DifficultyMultipliers m = cachedMultipliers;
@@ -66,7 +66,7 @@ public class DifficultyEventHandler {
 
         DifficultyInstance original = event.getDifficulty();
         if (original == null) return;
-        // No scaling needed for peaceful or near-peaceful difficulty
+        // 和平或接近和平难度无需缩放
         if (original.getEffectiveDifficulty() <= 0.0F) return;
 
         DifficultyMultipliers multipliers = getMultipliersSnapshot();
@@ -75,17 +75,17 @@ public class DifficultyEventHandler {
         float multiplier = DifficultyCalculator.calculateMultiplier(
                 event.getLevel(), pos, multipliers);
 
-        // Log every spawn for debugging — check logs to verify the pipeline works
-        LOGGER.debug("Spawn: {} at {} -> mult={} (eff={} -> {})",
+        // 记录每次生成用于调试 —— 检查日志以验证流程是否正常工作
+        LOGGER.debug("生成: {} 位置: {} -> 乘数={} (有效难度={} -> {})",
                 event.getEntity().getName().getString(), pos,
                 String.format("%.2f", multiplier),
                 String.format("%.2f", original.getEffectiveDifficulty()),
                 String.format("%.2f", original.getEffectiveDifficulty() * multiplier));
 
-        // Skip if no meaningful change
+        // 无显著变化则跳过
         if (Math.abs(multiplier - 1.0F) < 0.0001F) return;
 
-        // Get world parameters for the formula reconstruction
+        // 获取世界参数用于公式重构
         Difficulty difficulty = original.getDifficulty();
         Level level = event.getLevel().getLevel();
         long dayTime = level.getDayTime();
@@ -95,16 +95,16 @@ public class DifficultyEventHandler {
                 original, multiplier, difficulty, dayTime, moonPhase);
         event.setDifficulty(enhanced);
 
-        // Layer B: Apply region-scaled attribute modifiers (health, damage, speed, etc.)
+        // 层级B：应用区域缩放的属性修改器（生命值、伤害、速度等）
         if (Config.spawnAttributesEnabled && event.getEntity() instanceof LivingEntity) {
             LivingEntity living = (LivingEntity) event.getEntity();
-            // Skip players — only scale mob attributes
+            // 跳过玩家 —— 仅缩放生物属性
             if (!(living instanceof Player)) {
                 AttributeApplier.apply(living, multiplier);
                 if (LOGGER.isDebugEnabled()) {
                     var atkInst = living.getAttribute(net.minecraft.world.entity.ai.attributes.Attributes.ATTACK_DAMAGE);
                     String atkStr = atkInst != null ? String.format("%.1f", atkInst.getValue()) : "N/A";
-                    LOGGER.debug("  -> Attrs applied: maxHealth={}, atk={}",
+                    LOGGER.debug("  -> 属性已应用: 最大生命值={}, 攻击力={}",
                             String.format("%.1f", living.getMaxHealth()), atkStr);
                 }
             }

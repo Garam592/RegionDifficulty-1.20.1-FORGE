@@ -1,23 +1,23 @@
 package com.garam.regiondifficulty.combat;
 
 /**
- * Pure computation utility for region-difficulty damage scaling.
+ * 区域难度伤害缩放的纯计算工具类。
  *
- * <p>Formula: {@code newDamage = baseDamage * clamp(1 + (multiplier - 1) * intensity, min, max)}</p>
+ * <p>公式：{@code newDamage = baseDamage * clamp(1 + (multiplier - 1) * intensity, min, max)}</p>
  */
 public final class DamageScaler {
 
-    private DamageScaler() {} // utility class
+    private DamageScaler() {} // 工具类
 
     /**
-     * Scale a damage amount by a regional difficulty multiplier.
+     * 根据区域难度倍率缩放伤害值。
      *
-     * @param baseAmount the post-armor damage amount
-     * @param regionMult the regional difficulty multiplier (1.0 = neutral)
-     * @param intensity  config intensity weight (0.0 = no scaling, 1.0 = full)
-     * @param clampMin   minimum allowed scale factor
-     * @param clampMax   maximum allowed scale factor
-     * @return the scaled damage amount
+     * @param baseAmount 护甲减伤后的基础伤害值
+     * @param regionMult 区域难度倍率（1.0 = 不变）
+     * @param intensity  配置中的强度权重（0.0 = 不缩放，1.0 = 满缩放）
+     * @param clampMin   允许的最小缩放系数
+     * @param clampMax   允许的最大缩放系数
+     * @return 缩放后的伤害值
      */
     public static float scale(float baseAmount, float regionMult,
                                double intensity, double clampMin, double clampMax) {

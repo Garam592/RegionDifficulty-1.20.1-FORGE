@@ -5,37 +5,37 @@ import net.minecraft.world.Difficulty;
 import net.minecraft.world.DifficultyInstance;
 
 /**
- * Utility that creates a new {@link DifficultyInstance} with a modified effective difficulty,
- * without needing an Access Transformer.
+ * 用于创建具有修改后有效难度的 {@link DifficultyInstance} 的工具类，
+ * 无需使用 Access Transformer。
  *
- * <p>The technique: since {@code DifficultyInstance} is immutable and its effective difficulty
- * is computed from {@code (Difficulty, dayTime, chunkInhabitedTime, moonPhase)}, we reverse the
- * vanilla formula to find the {@code chunkInhabitedTime} that would produce the target effective
- * difficulty, then construct a new instance with that value.</p>
+ * <p>技术原理：由于 {@code DifficultyInstance} 是不可变的，其有效难度由
+ * {@code (Difficulty, dayTime, chunkInhabitedTime, moonPhase)} 计算得出，我们逆向推导
+ * 原版公式，找到能产生目标有效难度的 {@code chunkInhabitedTime}，
+ * 然后用该值构造一个新的实例。</p>
  */
 public final class RegionalDifficulty {
 
-    private RegionalDifficulty() {} // utility class
+    private RegionalDifficulty() {} // 工具类
 
-    /** Max chunk inhabited time used in vanilla formula (3,600,000 ticks = 50 in-game days). */
+    /** 原版公式中使用的最大区块驻留时间（3,600,000 刻 = 50 游戏日）。 */
     private static final float MAX_CHUNK_TIME = 3_600_000.0F;
 
-    /** The vanilla global-time offset constant. */
+    /** 原版全局时间偏移常量。 */
     private static final float TIME_OFFSET = -72_000.0F;
 
-    /** The vanilla global-time max constant. */
+    /** 原版全局时间最大值常量。 */
     private static final float MAX_TIME_FACTOR = 1_440_000.0F;
 
     /**
-     * Creates a DifficultyInstance whose effective difficulty equals
-     * {@code original.getEffectiveDifficulty() * multiplier}.
+     * 创建一个 DifficultyInstance，其有效难度等于
+     * {@code original.getEffectiveDifficulty() * multiplier}。
      *
-     * @param original   the vanilla DifficultyInstance for this spawn
-     * @param multiplier the combined regional difficulty multiplier
-     * @param difficulty the world difficulty setting
-     * @param dayTime    the current world day time (from {@code ServerLevel.getDayTime()})
-     * @param moonPhase  the current moon brightness (from {@code Level.getMoonBrightness()})
-     * @return a new DifficultyInstance with adjusted effective difficulty
+     * @param original   本次生成的原版 DifficultyInstance
+     * @param multiplier 综合区域难度倍率
+     * @param difficulty 世界难度设置
+     * @param dayTime    当前世界日间时间（来自 {@code ServerLevel.getDayTime()}）
+     * @param moonPhase  当前月相亮度（来自 {@code Level.getMoonBrightness()}）
+     * @return 具有调整后有效难度的新 DifficultyInstance
      */
     public static DifficultyInstance create(DifficultyInstance original,
                                             float multiplier,
@@ -47,29 +47,29 @@ public final class RegionalDifficulty {
         }
 
         float targetEffective = original.getEffectiveDifficulty() * multiplier;
-        // Clamp to safe range
+        // 限制在安全范围内
         targetEffective = Math.max(0.0F, Math.min(10.0F, targetEffective));
 
-        // Calculate the fixed components of the vanilla formula
+        // 计算原版公式中的固定分量
         float f1 = Mth.clamp((dayTime + TIME_OFFSET) / MAX_TIME_FACTOR, 0.0F, 1.0F) * 0.25F;
         float hardFactor = difficulty == Difficulty.HARD ? 1.0F : 0.75F;
         float moonFactor = Mth.clamp(moonPhase * 0.25F, 0.0F, f1);
 
-        // From: targetEffective = diffId * (0.75 + f1 + chunkFactor + moonFactor)
-        // (with EASY having local*0.5)
-        // So: chunkFactor = targetEffective / diffId - 0.75 - f1 - moonFactor
+        // 由：targetEffective = diffId * (0.75 + f1 + chunkFactor + moonFactor)
+        // （EASY 难度下 local*0.5）
+        // 因此：chunkFactor = targetEffective / diffId - 0.75 - f1 - moonFactor
         float localTarget = targetEffective / (float) difficulty.getId() - 0.75F - f1;
 
-        // Undo the EASY halving
+        // 撤销 EASY 难度的折半处理
         if (difficulty == Difficulty.EASY) {
             localTarget /= 0.5F;
         }
 
         float chunkFactor = localTarget - moonFactor;
 
-        // Convert chunkFactor to chunkInhabitedTime.
+        // 将 chunkFactor 转换为 chunkInhabitedTime。
         // chunkFactor = clamp(chunkTime / MAX_CHUNK_TIME, 0, 1) * hardFactor
-        // So: normalised = chunkFactor / hardFactor, then chunkTime = normalised * MAX_CHUNK_TIME
+        // 因此：normalised = chunkFactor / hardFactor，然后 chunkTime = normalised * MAX_CHUNK_TIME
         float normalised = Mth.clamp(chunkFactor / hardFactor, 0.0F, 1.0F);
         long newChunkTime = (long) (normalised * MAX_CHUNK_TIME);
 

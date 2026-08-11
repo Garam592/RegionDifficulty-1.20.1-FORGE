@@ -14,8 +14,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Immutable snapshot of config-derived multiplier tables.
- * Rebuilt from Config values on config load and reload.
+ * 从配置派生的倍率表的不可变快照。
+ * 在配置加载和重载时根据 Config 值重新构建。
  */
 @SuppressWarnings("removal")
 public class DifficultyMultipliers {
@@ -45,10 +45,10 @@ public class DifficultyMultipliers {
         this.depthMinMultiplier = depthMinMultiplier;
     }
 
-    // ========== Factory ==========
+    // ========== 工厂方法 ==========
 
     /**
-     * Build a DifficultyMultipliers instance from the current Config values.
+     * 根据当前 Config 值构建一个 DifficultyMultipliers 实例。
      */
     public static DifficultyMultipliers fromConfig() {
         return new DifficultyMultipliers(
@@ -64,7 +64,7 @@ public class DifficultyMultipliers {
     }
 
     /**
-     * Parse a list of "namespace:path=value" strings into a String->Float map.
+     * 将"命名空间:路径=值"格式的字符串列表解析为 String->Float 映射。
      */
     @SuppressWarnings("deprecation")
     private static Map<String, Float> parseEntryList(List<? extends String> entries) {
@@ -82,14 +82,14 @@ public class DifficultyMultipliers {
                         map.put(key, value);
                     }
                 } catch (Exception ignored) {
-                    // Skip malformed entries
+                    // 跳过格式错误的条目
                 }
             }
         }
         return map;
     }
 
-    // ========== Accessors ==========
+    // ========== 访问器 ==========
 
     public float getDimensionMultiplier(ResourceKey<Level> dimensionKey) {
         return dimensionMultipliers.getOrDefault(dimensionKey.location().toString(), defaultMultiplier);
@@ -104,7 +104,7 @@ public class DifficultyMultipliers {
     }
 
     /**
-     * Returns the set of all configured structure entries for iteration.
+     * 返回所有已配置结构条目的集合，用于迭代。
      */
     public Set<Map.Entry<String, Float>> getAllStructureEntries() {
         return structureMultipliers.entrySet();
@@ -115,17 +115,17 @@ public class DifficultyMultipliers {
     }
 
     /**
-     * Computes the depth multiplier from a Y coordinate using linear interpolation.
+     * 使用线性插值根据 Y 坐标计算深度倍率。
      * <ul>
-     *   <li>Above baseY (surface) → minMultiplier</li>
-     *   <li>Below maxY (deepest) → maxMultiplier</li>
-     *   <li>Between → linear interpolation</li>
+     *   <li>在 baseY（地表）以上 → minMultiplier</li>
+     *   <li>在 maxY（最深点）以下 → maxMultiplier</li>
+     *   <li>介于两者之间 → 线性插值</li>
      * </ul>
      */
     public float getDepthMultiplier(double y) {
         if (y >= depthBaseY) return depthMinMultiplier;
         if (y <= depthMaxY) return depthMaxMultiplier;
-        // Linear interpolation between baseY and maxY
+        // 在 baseY 和 maxY 之间进行线性插值
         float t = (float) ((depthBaseY - y) / (depthBaseY - depthMaxY));
         return depthMinMultiplier + (depthMaxMultiplier - depthMinMultiplier) * t;
     }

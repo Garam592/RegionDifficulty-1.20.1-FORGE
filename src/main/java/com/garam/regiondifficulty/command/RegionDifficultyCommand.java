@@ -21,8 +21,8 @@ import net.minecraftforge.fml.common.Mod;
 import java.util.Optional;
 
 /**
- * Debug command: {@code /regiondifficulty check} prints the regional difficulty
- * multiplier at the executing player's position, with a per-factor breakdown.
+ * 调试命令：{@code /regiondifficulty check} 打印执行玩家所在位置的区域难度倍率，
+ * 并按各个因子细分展示。
  */
 @Mod.EventBusSubscriber(modid = "region_difficulty")
 public class RegionDifficultyCommand {
@@ -33,7 +33,7 @@ public class RegionDifficultyCommand {
 
         dispatcher.register(
                 Commands.literal("regiondifficulty")
-                        .requires(src -> src.hasPermission(2)) // operator level 2
+                        .requires(src -> src.hasPermission(2)) // 操作员权限等级 2
                         .then(Commands.literal("check")
                                 .executes(RegionDifficultyCommand::executeCheck))
                         .then(Commands.literal("reload")
@@ -45,7 +45,7 @@ public class RegionDifficultyCommand {
     private static int executeCheck(CommandContext<CommandSourceStack> ctx) {
         CommandSourceStack source = ctx.getSource();
         if (!(source.getLevel() instanceof ServerLevel)) {
-            source.sendFailure(Component.literal("This command can only be used on a server level."));
+            source.sendFailure(Component.literal("此命令只能在服务器维度中使用。"));
             return 0;
         }
         ServerLevel serverLevel = (ServerLevel) source.getLevel();
@@ -54,14 +54,14 @@ public class RegionDifficultyCommand {
         DifficultyMultipliers multipliers = DifficultyEventHandler.getMultipliersSnapshot();
 
         if (multipliers == null) {
-            source.sendFailure(Component.literal("Difficulty multipliers not loaded yet."));
+            source.sendFailure(Component.literal("难度倍率尚未加载。"));
             return 0;
         }
 
-        // Full multiplier
+        // 完整倍率
         float fullMult = DifficultyCalculator.calculateMultiplier(serverLevel, pos, multipliers);
 
-        // Per-factor breakdown
+        // 各因子细分
         ResourceKey<Level> dimKey = serverLevel.dimension();
         float dimMult = multipliers.getDimensionMultiplier(dimKey);
 
@@ -71,7 +71,7 @@ public class RegionDifficultyCommand {
 
         float depthMult = multipliers.getDepthMultiplier(pos.getY());
 
-        // Structure multiplier — compute separately since cache merges it
+        // 结构倍率 — 单独计算，因为缓存会将它们合并
         float structMult = getStructureMultiplier(serverLevel, pos, multipliers);
 
         String posStr = pos.getX() + ", " + pos.getY() + ", " + pos.getZ();
@@ -82,22 +82,22 @@ public class RegionDifficultyCommand {
         String structMultStr = fmt(structMult);
         String depthMultStr = fmt(depthMult);
         String fullMultStr = fmt(fullMult);
-        String configStr = "global=" + (Config.enableRegionalDifficulty ? "ON" : "OFF")
-                + " spawnAttr=" + (Config.spawnAttributesEnabled ? "ON" : "OFF")
-                + " combat=" + (Config.combatScalingEnabled ? "ON" : "OFF")
-                + " spawnCtl=" + (Config.spawnControlEnabled ? "ON" : "OFF");
-        String cacheStr = "Cache: " + (Config.cacheEnabled ? "ON" : "OFF")
+        String configStr = "全局=" + (Config.enableRegionalDifficulty ? "开" : "关")
+                + " 生成属性=" + (Config.spawnAttributesEnabled ? "开" : "关")
+                + " 战斗=" + (Config.combatScalingEnabled ? "开" : "关")
+                + " 生成控制=" + (Config.spawnControlEnabled ? "开" : "关");
+        String cacheStr = "缓存: " + (Config.cacheEnabled ? "开" : "关")
                 + " ttl=" + Config.cacheTtlTicks + "t";
 
         source.sendSuccess(() -> Component.literal(""), false);
-        source.sendSuccess(() -> Component.literal("§6===== Region Difficulty Check ====="), false);
-        source.sendSuccess(() -> Component.literal("§ePosition: §f" + posStr), false);
-        source.sendSuccess(() -> Component.literal("§eDimension: §f" + dimStr + " §7(mult: " + dimMultStr + ")"), false);
-        source.sendSuccess(() -> Component.literal("§eBiome: §f" + biomeStr + " §7(mult: " + biomeMultStr + ")"), false);
-        source.sendSuccess(() -> Component.literal("§eStructure: §7(mult: " + structMultStr + ")"), false);
-        source.sendSuccess(() -> Component.literal("§eDepth (Y=" + pos.getY() + "): §7(mult: " + depthMultStr + ")"), false);
+        source.sendSuccess(() -> Component.literal("§6===== 区域难度检查 ====="), false);
+        source.sendSuccess(() -> Component.literal("§e位置: §f" + posStr), false);
+        source.sendSuccess(() -> Component.literal("§e维度: §f" + dimStr + " §7(倍率: " + dimMultStr + ")"), false);
+        source.sendSuccess(() -> Component.literal("§e生物群系: §f" + biomeStr + " §7(倍率: " + biomeMultStr + ")"), false);
+        source.sendSuccess(() -> Component.literal("§e结构: §7(倍率: " + structMultStr + ")"), false);
+        source.sendSuccess(() -> Component.literal("§e深度 (Y=" + pos.getY() + "): §7(倍率: " + depthMultStr + ")"), false);
         source.sendSuccess(() -> Component.literal(""), false);
-        source.sendSuccess(() -> Component.literal("§a>>> Combined Multiplier: §6§l" + fullMultStr), false);
+        source.sendSuccess(() -> Component.literal("§a>>> 综合倍率: §6§l" + fullMultStr), false);
         source.sendSuccess(() -> Component.literal(""), false);
         source.sendSuccess(() -> Component.literal("§7" + configStr), false);
         source.sendSuccess(() -> Component.literal("§7" + cacheStr), false);
@@ -108,7 +108,7 @@ public class RegionDifficultyCommand {
     private static int executeReload(CommandContext<CommandSourceStack> ctx) {
         CommandSourceStack source = ctx.getSource();
         DifficultyEventHandler.refreshMultipliers();
-        source.sendSuccess(() -> Component.literal("§aRegional difficulty multipliers reloaded from config."), false);
+        source.sendSuccess(() -> Component.literal("§a区域难度倍率已从配置重新加载。"), false);
         return 1;
     }
 

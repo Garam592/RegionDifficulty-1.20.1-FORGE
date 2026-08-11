@@ -20,46 +20,46 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import net.minecraftforge.registries.ForgeRegistries;
 import org.slf4j.Logger;
 
-// The value here should match an entry in the META-INF/mods.toml file
+// 此处的值应与 META-INF/mods.toml 文件中的条目匹配
 @Mod(RegionDifficulty.MODID)
 public class RegionDifficulty
 {
-    // Define mod id in a common place for everything to reference
+    // 在一个公共位置定义 mod id，方便所有地方引用
     public static final String MODID = "region_difficulty";
-    // Directly reference a slf4j logger
+    // 直接引用一个 slf4j 日志记录器
     private static final Logger LOGGER = LogUtils.getLogger();
 
     public RegionDifficulty(FMLJavaModLoadingContext context)
     {
         IEventBus modEventBus = context.getModEventBus();
 
-        // Register the commonSetup method for modloading
+        // 注册 commonSetup 方法用于模组加载
         modEventBus.addListener(this::commonSetup);
         ModItems.register(modEventBus);
         ModCreativeModeTabs.register(modEventBus);
-        // Register ourselves for server and other game events we are interested in
+        // 将自身注册到服务器和其他我们感兴趣的游戏事件中
         MinecraftForge.EVENT_BUS.register(this);
 
-        // Register the item to a creative tab
+        // 将物品注册到创造模式物品栏标签页
         modEventBus.addListener(this::addCreative);
 
-        // Register our mod's ForgeConfigSpec so that Forge can create and load the config file for us
+        // 注册本模组的 ForgeConfigSpec，以便 Forge 为我们创建和加载配置文件
         context.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
 
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)
     {
-        // Some common setup code
-        LOGGER.info("HELLO FROM COMMON SETUP");
+        // 一些通用设置代码
+        LOGGER.info("来自通用设置——你好");
 
         if (Config.logDirtBlock)
-            LOGGER.info("DIRT BLOCK >> {}", ForgeRegistries.BLOCKS.getKey(Blocks.DIRT));
+            LOGGER.info("泥土方块 >> {}", ForgeRegistries.BLOCKS.getKey(Blocks.DIRT));
 
         LOGGER.info(Config.magicNumberIntroduction + Config.magicNumber);
     }
 
-    // Add the example block item to the building blocks tab
+    // 将示例方块物品添加到建筑方块标签页
     private void addCreative(BuildCreativeModeTabContentsEvent event)
     {
 //        if(event.getTabKey()== CreativeModeTabs.COMBAT){
@@ -67,24 +67,24 @@ public class RegionDifficulty
 //        }
     }
 
-    // You can use SubscribeEvent and let the Event Bus discover methods to call
+    // 你可以使用 SubscribeEvent 并让事件总线自动发现要调用的方法
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event)
     {
-        // Do something when the server starts
-        LOGGER.info("HELLO from server starting");
+        // 服务器启动时执行一些操作
+        LOGGER.info("来自服务器启动——你好");
     }
 
-    // You can use EventBusSubscriber to automatically register all static methods in the class annotated with @SubscribeEvent
+    // 你可以使用 EventBusSubscriber 自动注册类中所有标注了 @SubscribeEvent 的静态方法
     @Mod.EventBusSubscriber(modid = MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
     public static class ClientModEvents
     {
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event)
         {
-            // Some client setup code
-            LOGGER.info("HELLO FROM CLIENT SETUP");
-            LOGGER.info("MINECRAFT NAME >> {}", Minecraft.getInstance().getUser().getName());
+            // 一些客户端设置代码
+            LOGGER.info("来自客户端设置——你好");
+            LOGGER.info("Minecraft 名称 >> {}", Minecraft.getInstance().getUser().getName());
         }
     }
 }

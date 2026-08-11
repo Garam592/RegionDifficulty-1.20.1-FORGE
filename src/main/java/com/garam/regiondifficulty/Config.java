@@ -11,91 +11,91 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Mod configuration including regional difficulty multipliers and effect layers.
- * Config values are parsed from string lists into typed fields on load/reload.
+ * 模组配置，包含区域难度倍率和效果层。
+ * 配置值在加载/重载时从字符串列表解析为类型化字段。
  */
 @Mod.EventBusSubscriber(modid = RegionDifficulty.MODID, bus = Mod.EventBusSubscriber.Bus.MOD)
 @SuppressWarnings("removal")
 public class Config {
     private static final ForgeConfigSpec.Builder BUILDER = new ForgeConfigSpec.Builder();
 
-    // ========== Legacy config entries (kept for compatibility) ==========
+    // ========== 旧版配置项（保留用于兼容） ==========
     private static final ForgeConfigSpec.BooleanValue LOG_DIRT_BLOCK = BUILDER
-            .comment("Whether to log the dirt block on common setup")
+            .comment("是否在通用设置时记录泥土方块日志")
             .define("logDirtBlock", true);
 
     private static final ForgeConfigSpec.IntValue MAGIC_NUMBER = BUILDER
-            .comment("A magic number")
+            .comment("一个魔法数字")
             .defineInRange("magicNumber", 42, 0, Integer.MAX_VALUE);
 
     public static final ForgeConfigSpec.ConfigValue<String> MAGIC_NUMBER_INTRODUCTION = BUILDER
-            .comment("What you want the introduction message to be for the magic number")
+            .comment("你希望魔法数字的介绍信息是什么")
             .define("magicNumberIntroduction", "The magic number is... ");
 
-    // ========== Regional Difficulty Configuration (Layer A) ==========
+    // ========== 区域难度配置（A层） ==========
 
     private static final ForgeConfigSpec.BooleanValue ENABLE_REGIONAL_DIFFICULTY = BUILDER
-            .comment("Master switch to enable/disable the regional difficulty overhaul")
+            .comment("启用/禁用区域难度系统的总开关")
             .define("regionalDifficulty.enabled", true);
 
     private static final ForgeConfigSpec.ConfigValue<List<? extends String>> DIMENSION_MULTIPLIERS = BUILDER
-            .comment("Per-dimension difficulty multipliers.",
-                    "Format: \"namespace:path=multiplier\"",
-                    "Example: \"minecraft:the_nether=2.0\"")
+            .comment("按维度的难度倍率。",
+                    "格式：\"命名空间:路径=倍率\"",
+                    "示例：\"minecraft:the_nether=2.0\"")
             .defineListAllowEmpty("regionalDifficulty.dimensionMultipliers",
                     defaultDimensionMultipliers(),
                     Config::validateMultiplierEntry);
 
     private static final ForgeConfigSpec.ConfigValue<List<? extends String>> BIOME_MULTIPLIERS = BUILDER
-            .comment("Per-biome difficulty multipliers.",
-                    "Format: \"namespace:path=multiplier\"",
-                    "Example: \"minecraft:desert=1.4\"")
+            .comment("按生物群系的难度倍率。",
+                    "格式：\"命名空间:路径=倍率\"",
+                    "示例：\"minecraft:desert=1.4\"")
             .defineListAllowEmpty("regionalDifficulty.biomeMultipliers",
                     defaultBiomeMultipliers(),
                     Config::validateMultiplierEntry);
 
     private static final ForgeConfigSpec.ConfigValue<List<? extends String>> STRUCTURE_MULTIPLIERS = BUILDER
-            .comment("Per-structure difficulty multipliers.",
-                    "Format: \"namespace:path=multiplier\"",
-                    "Example: \"minecraft:bastion_remnant=1.8\"",
-                    "When a position is inside multiple structures, the HIGHEST multiplier is used.")
+            .comment("按结构的难度倍率。",
+                    "格式：\"命名空间:路径=倍率\"",
+                    "示例：\"minecraft:bastion_remnant=1.8\"",
+                    "当一个位置处于多个结构内时，使用最大的倍率值。")
             .defineListAllowEmpty("regionalDifficulty.structureMultipliers",
                     defaultStructureMultipliers(),
                     Config::validateMultiplierEntry);
 
     private static final ForgeConfigSpec.DoubleValue DEPTH_BASE_Y = BUILDER
-            .comment("Y-level considered 'surface'. At or above this level, the depth multiplier equals minMultiplier.")
+            .comment("被视为\"地表\"的Y坐标。在此高度及以上，深度倍率等于 minMultiplier。")
             .defineInRange("regionalDifficulty.depth.baseY", 64.0, -64.0, 320.0);
 
     private static final ForgeConfigSpec.DoubleValue DEPTH_MAX_Y = BUILDER
-            .comment("Y-level at which the depth multiplier reaches its maximum value (deepest point).")
+            .comment("深度倍率达到最大值（最深点）的Y坐标。")
             .defineInRange("regionalDifficulty.depth.maxY", -64.0, -64.0, 320.0);
 
     private static final ForgeConfigSpec.DoubleValue DEPTH_MAX_MULTIPLIER = BUILDER
-            .comment("Maximum depth multiplier applied at or below maxY.")
+            .comment("在 maxY 及以下应用的最大深度倍率。")
             .defineInRange("regionalDifficulty.depth.maxMultiplier", 2.0, 0.5, 10.0);
 
     private static final ForgeConfigSpec.DoubleValue DEPTH_MIN_MULTIPLIER = BUILDER
-            .comment("Depth multiplier applied at or above baseY (surface level).")
+            .comment("在 baseY 及以上（地表层级）应用的深度倍率。")
             .defineInRange("regionalDifficulty.depth.minMultiplier", 1.0, 0.1, 5.0);
 
     private static final ForgeConfigSpec.DoubleValue DEFAULT_MULTIPLIER = BUILDER
-            .comment("Default multiplier for biomes/structures/dimensions not explicitly configured.")
+            .comment("未明确配置的生物群系/结构/维度的默认倍率。")
             .defineInRange("regionalDifficulty.defaultMultiplier", 1.0, 0.1, 10.0);
 
-    // ========== Spawn Attribute Modifier Configuration (Layer B) ==========
+    // ========== 生成属性修改器配置（B层） ==========
 
     private static final ForgeConfigSpec.BooleanValue SPAWN_ATTR_ENABLED = BUILDER
-            .comment("Master switch for spawn-time attribute scaling.",
-                    "When enabled, mob attributes (health, damage, speed, etc.) are scaled",
-                    "by the regional difficulty multiplier at their spawn position.")
+            .comment("生成时属性缩放的总开关。",
+                    "启用后，生物的属性（生命值、攻击力、速度等）将根据",
+                    "其生成位置对应的区域难度倍率进行缩放。")
             .define("regionalDifficulty.spawnAttributes.enabled", true);
 
-    // --- Per-attribute toggles and intensities ---
+    // --- 各属性的开关和强度 ---
     private static final ForgeConfigSpec.BooleanValue ATTR_HEALTH_ENABLED = BUILDER
             .define("regionalDifficulty.spawnAttributes.maxHealth.enabled", true);
     private static final ForgeConfigSpec.DoubleValue ATTR_HEALTH_INTENSITY = BUILDER
-            .comment("Intensity for max health scaling. 0.0 = disabled, 1.0 = full scaling.")
+            .comment("最大生命值缩放的强度。0.0 = 禁用，1.0 = 完整缩放。")
             .defineInRange("regionalDifficulty.spawnAttributes.maxHealth.intensity", 1.0, 0.0, 5.0);
 
     private static final ForgeConfigSpec.BooleanValue ATTR_ATTACK_ENABLED = BUILDER
@@ -134,18 +134,18 @@ public class Config {
             .defineInRange("regionalDifficulty.spawnAttributes.spawnReinforcements.intensity", 1.0, 0.0, 5.0);
 
     private static final ForgeConfigSpec.ConfigValue<List<? extends String>> SPAWN_ATTR_EXCLUDED = BUILDER
-            .comment("Mob types (registry names) excluded from attribute scaling.",
-                    "Format: \"namespace:path\"",
-                    "Example: \"minecraft:ender_dragon\"")
+            .comment("排除在属性缩放之外的生物类型（注册名称）。",
+                    "格式：\"命名空间:路径\"",
+                    "示例：\"minecraft:ender_dragon\"")
             .defineListAllowEmpty("regionalDifficulty.spawnAttributes.excludedMobs",
                     List.of("minecraft:ender_dragon", "minecraft:wither"),
                     Config::validateIdEntry);
 
-    // ========== Combat Scaling Configuration (Layer C) ==========
+    // ========== 战斗缩放配置（C层） ==========
 
     private static final ForgeConfigSpec.BooleanValue COMBAT_ENABLED = BUILDER
-            .comment("Master switch for runtime combat damage scaling.",
-                    "Scales damage dealt/received based on regional difficulty at the attacker/target position.")
+            .comment("运行时战斗伤害缩放的总开关。",
+                    "根据攻击者/目标所在位置的区域难度来缩放造成/受到的伤害。")
             .define("regionalDifficulty.combatScaling.enabled", true);
 
     private static final ForgeConfigSpec.BooleanValue COMBAT_TOPLAYER_ENABLED = BUILDER
@@ -166,54 +166,54 @@ public class Config {
     private static final ForgeConfigSpec.DoubleValue COMBAT_BYPLAYER_CLAMPMAX = BUILDER
             .defineInRange("regionalDifficulty.combatScaling.damageByPlayer.clampMax", 2.0, 0.0, 10.0);
 
-    // ========== Spawn Control Configuration (Layer D) ==========
+    // ========== 生成控制配置（D层） ==========
 
     private static final ForgeConfigSpec.BooleanValue SPAWNCTL_ENABLED = BUILDER
-            .comment("Master switch for spawn type gating by regional difficulty.",
-                    "When enabled, mob types can be restricted to specific difficulty ranges.",
-                    "This is an experimental feature — disabled by default.")
+            .comment("按区域难度控制生物生成类型的总开关。",
+                    "启用后，可将生物类型限制在特定的难度范围内。",
+                    "这是一个实验性功能——默认禁用。")
             .define("regionalDifficulty.spawnControl.enabled", false);
 
     private static final ForgeConfigSpec.BooleanValue SPAWNCTL_DEFAULT_ALLOW = BUILDER
-            .comment("Whether mob types without an explicit rule are allowed to spawn.",
-                    "true = unlisted mobs always spawn (safe default).",
-                    "false = unlisted mobs require a matching rule (restrictive).")
+            .comment("是否允许没有明确规则的生物类型生成。",
+                    "true = 未列出生物始终可以生成（安全的默认值）。",
+                    "false = 未列出生物需要匹配的规则才能生成（限制性模式）。")
             .define("regionalDifficulty.spawnControl.defaultAllow", true);
 
     private static final ForgeConfigSpec.ConfigValue<List<? extends String>> SPAWNCTL_RULES = BUILDER
-            .comment("Per-mob-type spawn rules based on regional difficulty multiplier.",
-                    "Format: \"namespace:path=minMultiplier,maxMultiplier\"",
-                    "Example: \"minecraft:wither_skeleton=2.0,\"  (requires multiplier >= 2.0)",
-                    "Example: \"minecraft:creeper=1.5,3.0\"       (requires 1.5 <= multiplier <= 3.0)",
-                    "Empty min = 0.0, empty max = unbounded.")
+            .comment("基于区域难度倍率的各生物类型生成规则。",
+                    "格式：\"命名空间:路径=最小倍率,最大倍率\"",
+                    "示例：\"minecraft:wither_skeleton=2.0,\"  （需要倍率 >= 2.0）",
+                    "示例：\"minecraft:creeper=1.5,3.0\"       （需要 1.5 <= 倍率 <= 3.0）",
+                    "最小倍率留空 = 0.0，最大倍率留空 = 无上限。")
             .defineListAllowEmpty("regionalDifficulty.spawnControl.rules",
                     List.of(),
                     Config::validateSpawnRuleEntry);
 
-    // ========== Cache Configuration ==========
+    // ========== 缓存配置 ==========
 
     private static final ForgeConfigSpec.BooleanValue CACHE_ENABLED = BUILDER
-            .comment("Whether to cache regional difficulty calculations per chunk.",
-                    "Recommended to keep enabled for performance.")
+            .comment("是否按区块缓存区域难度计算结果。",
+                    "建议保持启用以提高性能。")
             .define("regionalDifficulty.cache.enabled", true);
 
     private static final ForgeConfigSpec.IntValue CACHE_TTL_TICKS = BUILDER
-            .comment("How long (in ticks) a cached difficulty value remains valid.",
-                    "Default 6000 ticks = 5 minutes. Lower = more responsive to config changes.",
-                    "Higher = better performance for structure-heavy configs.")
+            .comment("缓存难度值保持有效的时长（以游戏刻为单位）。",
+                    "默认 6000 刻 = 5 分钟。值越小对配置变更响应越快。",
+                    "值越大对含大量结构的配置性能越好。")
             .defineInRange("regionalDifficulty.cache.ttlTicks", 6000, 100, 72000);
 
-    // ========== Build the spec ==========
+    // ========== 构建配置规范 ==========
     static final ForgeConfigSpec SPEC = BUILDER.build();
 
-    // ========== Parsed public static fields ==========
+    // ========== 解析后的公共静态字段 ==========
 
-    // Legacy
+    // 旧版
     public static boolean logDirtBlock;
     public static int magicNumber;
     public static String magicNumberIntroduction;
 
-    // Layer A: Regional Difficulty multipliers
+    // A层：区域难度倍率
     public static boolean enableRegionalDifficulty;
     public static List<? extends String> dimensionMultipliers;
     public static List<? extends String> biomeMultipliers;
@@ -224,7 +224,7 @@ public class Config {
     public static float depthMinMultiplier;
     public static float defaultMultiplier;
 
-    // Layer B: Spawn attribute scaling
+    // B层：生成属性缩放
     public static boolean spawnAttributesEnabled;
     public static boolean attrHealthEnabled;
     public static double attrHealthIntensity;
@@ -244,7 +244,7 @@ public class Config {
     public static double attrReinforceIntensity;
     public static List<? extends String> spawnAttrExcludedMobs;
 
-    // Layer C: Combat scaling
+    // C层：战斗缩放
     public static boolean combatScalingEnabled;
     public static boolean combatToPlayerEnabled;
     public static double combatToPlayerIntensity;
@@ -255,16 +255,16 @@ public class Config {
     public static double combatByPlayerClampMin;
     public static double combatByPlayerClampMax;
 
-    // Layer D: Spawn control
+    // D层：生成控制
     public static boolean spawnControlEnabled;
     public static boolean spawnControlDefaultAllow;
     public static List<? extends String> spawnControlRules;
 
-    // Cache
+    // 缓存
     public static boolean cacheEnabled;
     public static int cacheTtlTicks;
 
-    // ========== Validation ==========
+    // ========== 验证 ==========
 
     @SuppressWarnings("deprecation")
     private static boolean validateMultiplierEntry(final Object obj) {
@@ -282,7 +282,7 @@ public class Config {
         }
     }
 
-    /** Validates a simple "namespace:path" entry (no value part). */
+    /** 验证简单的"命名空间:路径"条目（无值部分）。 */
     @SuppressWarnings("deprecation")
     private static boolean validateIdEntry(final Object obj) {
         if (!(obj instanceof final String entry)) return false;
@@ -296,7 +296,7 @@ public class Config {
         }
     }
 
-    /** Validates a spawn rule entry: "namespace:path=min,max" or "namespace:path=min," or "namespace:path=,max". */
+    /** 验证生成规则条目："namespace:path=min,max" 或 "namespace:path=min," 或 "namespace:path=,max"。 */
     @SuppressWarnings("deprecation")
     private static boolean validateSpawnRuleEntry(final Object obj) {
         if (!(obj instanceof final String entry)) return false;
@@ -307,7 +307,7 @@ public class Config {
             if (idParts.length != 2) return false;
             ResourceLocation resource = new ResourceLocation(idParts[0], idParts[1]);
             if (resource.getNamespace().isEmpty() || resource.getPath().isEmpty()) return false;
-            // Validate the range part: "min,max" or "min," or ",max" or empty
+            // 验证范围部分："min,max" 或 "min," 或 ",max" 或为空
             String range = parts[1].trim();
             if (range.isEmpty()) return false;
             String[] rangeParts = range.split(",", 2);
@@ -324,7 +324,7 @@ public class Config {
         }
     }
 
-    // ========== Default value providers ==========
+    // ========== 默认值提供器 ==========
 
     private static List<String> defaultDimensionMultipliers() {
         return List.of(
@@ -336,7 +336,7 @@ public class Config {
 
     private static List<String> defaultBiomeMultipliers() {
         return Arrays.asList(
-                // Overworld — harsh environments
+                // 主世界——恶劣环境
                 "minecraft:desert=1.4",
                 "minecraft:badlands=1.3",
                 "minecraft:eroded_badlands=1.5",
@@ -346,15 +346,15 @@ public class Config {
                 "minecraft:jagged_peaks=1.3",
                 "minecraft:snowy_slopes=1.2",
                 "minecraft:snowy_plains=1.2",
-                // Swamps
+                // 沼泽
                 "minecraft:swamp=1.2",
                 "minecraft:mangrove_swamp=1.3",
-                // Forests
+                // 森林
                 "minecraft:dark_forest=1.5",
                 "minecraft:old_growth_birch_forest=1.1",
                 "minecraft:old_growth_pine_taiga=1.1",
                 "minecraft:old_growth_spruce_taiga=1.1",
-                // Underground
+                // 地下
                 "minecraft:deep_dark=2.5",
                 "minecraft:dripstone_caves=1.4",
                 "minecraft:lush_caves=0.8",
@@ -362,15 +362,15 @@ public class Config {
                 "minecraft:deep_cold_ocean=1.3",
                 "minecraft:deep_frozen_ocean=1.5",
                 "minecraft:deep_lukewarm_ocean=1.1",
-                // Mushroom — safe haven
+                // 蘑菇岛——安全港湾
                 "minecraft:mushroom_fields=0.6",
-                // Nether biomes
+                // 下界生物群系
                 "minecraft:nether_wastes=2.0",
                 "minecraft:soul_sand_valley=2.3",
                 "minecraft:crimson_forest=2.0",
                 "minecraft:warped_forest=1.8",
                 "minecraft:basalt_deltas=2.5",
-                // End biomes
+                // 末地生物群系
                 "minecraft:the_end=3.0",
                 "minecraft:end_highlands=3.0",
                 "minecraft:end_midlands=2.5",
@@ -381,7 +381,7 @@ public class Config {
 
     private static List<String> defaultStructureMultipliers() {
         return Arrays.asList(
-                // Overworld structures
+                // 主世界结构
                 "minecraft:monument=1.5",
                 "minecraft:pillager_outpost=1.4",
                 "minecraft:swamp_hut=1.3",
@@ -394,31 +394,31 @@ public class Config {
                 "minecraft:shipwreck=1.1",
                 "minecraft:ruined_portal=1.2",
                 "minecraft:trail_ruins=1.1",
-                // Villages are relatively safe
+                // 村庄相对安全
                 "minecraft:village_plains=0.8",
                 "minecraft:village_desert=0.9",
                 "minecraft:village_savanna=0.9",
                 "minecraft:village_snowy=0.9",
                 "minecraft:village_taiga=0.9",
-                // Nether structures
+                // 下界结构
                 "minecraft:fortress=2.0",
                 "minecraft:bastion_remnant=2.2",
                 "minecraft:nether_fossil=1.5",
-                // End structures
+                // 末地结构
                 "minecraft:end_city=3.0"
         );
     }
 
-    // ========== Config load/reload handler ==========
+    // ========== 配置加载/重载处理器 ==========
 
     @SubscribeEvent
     static void onLoad(final ModConfigEvent event) {
-        // Legacy
+        // 旧版
         logDirtBlock = LOG_DIRT_BLOCK.get();
         magicNumber = MAGIC_NUMBER.get();
         magicNumberIntroduction = MAGIC_NUMBER_INTRODUCTION.get();
 
-        // Layer A: Regional difficulty multipliers
+        // A层：区域难度倍率
         enableRegionalDifficulty = ENABLE_REGIONAL_DIFFICULTY.get();
         dimensionMultipliers = DIMENSION_MULTIPLIERS.get();
         biomeMultipliers = BIOME_MULTIPLIERS.get();
@@ -429,7 +429,7 @@ public class Config {
         depthMinMultiplier = DEPTH_MIN_MULTIPLIER.get().floatValue();
         defaultMultiplier = DEFAULT_MULTIPLIER.get().floatValue();
 
-        // Layer B: Spawn attribute scaling
+        // B层：生成属性缩放
         spawnAttributesEnabled = SPAWN_ATTR_ENABLED.get();
         attrHealthEnabled = ATTR_HEALTH_ENABLED.get();
         attrHealthIntensity = ATTR_HEALTH_INTENSITY.get();
@@ -449,7 +449,7 @@ public class Config {
         attrReinforceIntensity = ATTR_REINFORCE_INTENSITY.get();
         spawnAttrExcludedMobs = SPAWN_ATTR_EXCLUDED.get();
 
-        // Layer C: Combat scaling
+        // C层：战斗缩放
         combatScalingEnabled = COMBAT_ENABLED.get();
         combatToPlayerEnabled = COMBAT_TOPLAYER_ENABLED.get();
         combatToPlayerIntensity = COMBAT_TOPLAYER_INTENSITY.get();
@@ -460,16 +460,16 @@ public class Config {
         combatByPlayerClampMin = COMBAT_BYPLAYER_CLAMPMIN.get();
         combatByPlayerClampMax = COMBAT_BYPLAYER_CLAMPMAX.get();
 
-        // Layer D: Spawn control
+        // D层：生成控制
         spawnControlEnabled = SPAWNCTL_ENABLED.get();
         spawnControlDefaultAllow = SPAWNCTL_DEFAULT_ALLOW.get();
         spawnControlRules = SPAWNCTL_RULES.get();
 
-        // Cache
+        // 缓存
         cacheEnabled = CACHE_ENABLED.get();
         cacheTtlTicks = CACHE_TTL_TICKS.get();
 
-        // Refresh cached data
+        // 刷新缓存数据
         DifficultyEventHandler.refreshMultipliers();
     }
 }
