@@ -14,10 +14,10 @@ public class ModCreativeModeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS=
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, RegionDifficulty.MODID);
     public static final RegistryObject<CreativeModeTab> TEST_TAB=
-            CREATIVE_MODE_TABS.register("test_tab",()-> CreativeModeTab.builder().icon(()->
-        new ItemStack(ModItems.EX_ITEM.get())).title(Component.translatable("itemGroup.region_difficulty_tab"))
+            CREATIVE_MODE_TABS.register("region_difficulty",()-> CreativeModeTab.builder().icon(()->
+        new ItemStack(ModItems.DIFFICULTY_INDICATOR.get())).title(Component.translatable("itemGroup.region_difficulty_tab"))
                     .displayItems((pParameters, pOutput) -> {
-                        pOutput.accept(ModItems.EX_ITEM.get());
+                        pOutput.accept(ModItems.DIFFICULTY_INDICATOR.get());
                     }).build());
     public static void register(IEventBus eventBus){
         CREATIVE_MODE_TABS.register(eventBus);

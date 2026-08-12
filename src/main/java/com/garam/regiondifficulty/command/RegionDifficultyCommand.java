@@ -69,7 +69,7 @@ public class RegionDifficultyCommand {
         float biomeMult = biomeKey.map(multipliers::getBiomeMultiplier)
                 .orElse(multipliers.getDefaultMultiplier());
 
-        float depthMult = multipliers.getDepthMultiplier(pos.getY());
+        float depthMult = multipliers.getDepthMultiplier(dimKey, pos.getY());
 
         // 结构倍率 — 单独计算，因为缓存会将它们合并
         float structMult = getStructureMultiplier(serverLevel, pos, multipliers);

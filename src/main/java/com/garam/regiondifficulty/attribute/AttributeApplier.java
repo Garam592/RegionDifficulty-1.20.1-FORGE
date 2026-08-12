@@ -24,7 +24,6 @@ public final class AttributeApplier {
 
     // 固定UUID —— 每种属性一个，所有实体共享
     private static final UUID UUID_HEALTH        = UUID.fromString("a1b2c3d4-1001-4000-8000-000000000001");
-    private static final UUID UUID_ATTACK_DAMAGE = UUID.fromString("a1b2c3d4-1001-4000-8000-000000000002");
     private static final UUID UUID_MOVEMENT_SPEED = UUID.fromString("a1b2c3d4-1001-4000-8000-000000000003");
     private static final UUID UUID_ARMOR         = UUID.fromString("a1b2c3d4-1001-4000-8000-000000000004");
     private static final UUID UUID_ARMOR_TOUGHNESS = UUID.fromString("a1b2c3d4-1001-4000-8000-000000000005");
@@ -101,12 +100,12 @@ public final class AttributeApplier {
      */
     public static void removeAll(LivingEntity entity) {
         Attribute[] attrs = {
-                Attributes.MAX_HEALTH, Attributes.ATTACK_DAMAGE, Attributes.MOVEMENT_SPEED,
+                Attributes.MAX_HEALTH, Attributes.MOVEMENT_SPEED,
                 Attributes.ARMOR, Attributes.ARMOR_TOUGHNESS, Attributes.FOLLOW_RANGE,
                 Attributes.KNOCKBACK_RESISTANCE, Attributes.SPAWN_REINFORCEMENTS_CHANCE
         };
         UUID[] uuids = {
-                UUID_HEALTH, UUID_ATTACK_DAMAGE, UUID_MOVEMENT_SPEED,
+                UUID_HEALTH, UUID_MOVEMENT_SPEED,
                 UUID_ARMOR, UUID_ARMOR_TOUGHNESS, UUID_FOLLOW_RANGE,
                 UUID_KNOCKBACK_RES, UUID_REINFORCEMENTS
         };
@@ -127,8 +126,6 @@ public final class AttributeApplier {
         return new AttrTarget[] {
                 new AttrTarget(Attributes.MAX_HEALTH, UUID_HEALTH,
                         Config.attrHealthEnabled, Config.attrHealthIntensity),
-                new AttrTarget(Attributes.ATTACK_DAMAGE, UUID_ATTACK_DAMAGE,
-                        Config.attrAttackEnabled, Config.attrAttackIntensity),
                 new AttrTarget(Attributes.MOVEMENT_SPEED, UUID_MOVEMENT_SPEED,
                         Config.attrSpeedEnabled, Config.attrSpeedIntensity),
                 new AttrTarget(Attributes.ARMOR, UUID_ARMOR,

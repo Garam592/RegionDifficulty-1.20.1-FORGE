@@ -1,4 +1,6 @@
 {
-  "item.region_difficulty.ex_item": "测试物品",
-  "itemGroup.region_difficulty_tab": "区域难度"
+  "item.region_difficulty.difficulty_indicator": "区域难度指示器",
+  "itemGroup.region_difficulty_tab": "区域难度",
+  "hud.region_difficulty.overall": "区域难度",
+  "hud.region_difficulty.no_data": "等待服务器数据..."
 }

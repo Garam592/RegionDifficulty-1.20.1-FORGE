@@ -1,4 +1,6 @@
 {
-  "item.region_difficulty.ex_item":"example item",
-  "itemGroup.region_difficulty_tab": "Region Difficulty"
+  "item.region_difficulty.difficulty_indicator":"Difficulty Indicator",
+  "itemGroup.region_difficulty_tab": "Region Difficulty",
+  "hud.region_difficulty.overall": "Region Difficulty",
+  "hud.region_difficulty.no_data": "Waiting for server..."
 }

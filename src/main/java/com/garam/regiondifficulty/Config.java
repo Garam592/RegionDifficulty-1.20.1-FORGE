@@ -79,6 +79,15 @@ public class Config {
             .comment("在 baseY 及以上（地表层级）应用的深度倍率。")
             .defineInRange("regionalDifficulty.depth.minMultiplier", 1.0, 0.1, 5.0);
 
+    private static final ForgeConfigSpec.ConfigValue<List<? extends String>> DEPTH_OVERRIDES = BUILDER
+            .comment("按维度的深度曲线覆盖。",
+                    "格式：\"命名空间:路径=baseY,maxY,maxMultiplier,minMultiplier\"",
+                    "示例：\"minecraft:the_nether=100.0,0.0,2.5,1.0\"",
+                    "未在此列出的维度使用上述全局默认深度参数。")
+            .defineListAllowEmpty("regionalDifficulty.depthOverrides",
+                    defaultDepthOverrides(),
+                    Config::validateDepthOverrideEntry);
+
     private static final ForgeConfigSpec.DoubleValue DEFAULT_MULTIPLIER = BUILDER
             .comment("未明确配置的生物群系/结构/维度的默认倍率。")
             .defineInRange("regionalDifficulty.defaultMultiplier", 1.0, 0.1, 10.0);
@@ -98,9 +107,12 @@ public class Config {
             .comment("最大生命值缩放的强度。0.0 = 禁用，1.0 = 完整缩放。")
             .defineInRange("regionalDifficulty.spawnAttributes.maxHealth.intensity", 1.0, 0.0, 5.0);
 
+    // 已由 combatScaling 层接管伤害缩放，此配置项保留兼容但不再生效
     private static final ForgeConfigSpec.BooleanValue ATTR_ATTACK_ENABLED = BUILDER
+            .comment("已废弃：伤害缩放已迁移至 combatScaling 层。此配置项不再生效。")
             .define("regionalDifficulty.spawnAttributes.attackDamage.enabled", true);
     private static final ForgeConfigSpec.DoubleValue ATTR_ATTACK_INTENSITY = BUILDER
+            .comment("已废弃：伤害缩放已迁移至 combatScaling 层。此配置项不再生效。")
             .defineInRange("regionalDifficulty.spawnAttributes.attackDamage.intensity", 1.0, 0.0, 5.0);
 
     private static final ForgeConfigSpec.BooleanValue ATTR_SPEED_ENABLED = BUILDER
@@ -222,6 +234,7 @@ public class Config {
     public static float depthMaxY;
     public static float depthMaxMultiplier;
     public static float depthMinMultiplier;
+    public static List<? extends String> depthOverrides;
     public static float defaultMultiplier;
 
     // B层：生成属性缩放
@@ -324,6 +337,30 @@ public class Config {
         }
     }
 
+    /** 验证深度覆盖条目："namespace:path=float,float,float,float"。 */
+    @SuppressWarnings("deprecation")
+    private static boolean validateDepthOverrideEntry(final Object obj) {
+        if (!(obj instanceof final String entry)) return false;
+        String[] parts = entry.split("=", 2);
+        if (parts.length != 2) return false;
+        try {
+            String[] idParts = parts[0].split(":", 2);
+            if (idParts.length != 2) return false;
+            ResourceLocation resource = new ResourceLocation(idParts[0], idParts[1]);
+            if (resource.getNamespace().isEmpty() || resource.getPath().isEmpty()) return false;
+            // 验证四个浮点数：baseY,maxY,maxMultiplier,minMultiplier
+            String[] values = parts[1].split(",", 4);
+            if (values.length != 4) return false;
+            for (String value : values) {
+                float f = Float.parseFloat(value.trim());
+                if (!Float.isFinite(f)) return false;
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
     // ========== 默认值提供器 ==========
 
     private static List<String> defaultDimensionMultipliers() {
@@ -409,6 +446,13 @@ public class Config {
         );
     }
 
+    private static List<String> defaultDepthOverrides() {
+        return List.of(
+                "minecraft:the_nether=100.0,0.0,2.5,1.0",
+                "minecraft:the_end=60.0,-64.0,3.0,1.0"
+        );
+    }
+
     // ========== 配置加载/重载处理器 ==========
 
     @SubscribeEvent
@@ -427,6 +471,7 @@ public class Config {
         depthMaxY = DEPTH_MAX_Y.get().floatValue();
         depthMaxMultiplier = DEPTH_MAX_MULTIPLIER.get().floatValue();
         depthMinMultiplier = DEPTH_MIN_MULTIPLIER.get().floatValue();
+        depthOverrides = DEPTH_OVERRIDES.get();
         defaultMultiplier = DEFAULT_MULTIPLIER.get().floatValue();
 
         // B层：生成属性缩放
