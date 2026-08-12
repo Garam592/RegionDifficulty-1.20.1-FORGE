@@ -1,14 +1,23 @@
 package com.garam.regiondifficulty;
 
+import com.garam.regiondifficulty.client.ClientDifficultyCache;
+import com.garam.regiondifficulty.client.hud.DifficultyHudOverlay;
+import com.garam.regiondifficulty.item.DifficultyIndicatorItem;
 import com.garam.regiondifficulty.item.ModCreativeModeTabs;
 import com.garam.regiondifficulty.item.ModItems;
+import com.garam.regiondifficulty.network.NetworkHandler;
+import com.garam.regiondifficulty.network.RequestDifficultyPacket;
 import com.mojang.logging.LogUtils;
 import net.minecraft.client.Minecraft;
 import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.client.event.ClientPlayerNetworkEvent;
+import net.minecraftforge.client.event.RenderGuiOverlayEvent;
+import net.minecraftforge.client.gui.overlay.VanillaGuiOverlay;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
+import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.event.server.ServerStartingEvent;
 import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
@@ -46,6 +55,8 @@ public class RegionDifficulty
         // 注册本模组的 ForgeConfigSpec，以便 Forge 为我们创建和加载配置文件
         context.registerConfig(ModConfig.Type.COMMON, Config.SPEC);
 
+        // 注册网络通道（C2S/S2C）
+        NetworkHandler.register();
     }
 
     private void commonSetup(final FMLCommonSetupEvent event)
@@ -62,17 +73,14 @@ public class RegionDifficulty
     // 将示例方块物品添加到建筑方块标签页
     private void addCreative(BuildCreativeModeTabContentsEvent event)
     {
-//        if(event.getTabKey()== CreativeModeTabs.COMBAT){
-//            event.accept(ModItems.EX_ITEM);
-//        }
+
     }
 
     // 你可以使用 SubscribeEvent 并让事件总线自动发现要调用的方法
     @SubscribeEvent
     public void onServerStarting(ServerStartingEvent event)
     {
-        // 服务器启动时执行一些操作
-        LOGGER.info("来自服务器启动——你好");
+
     }
 
     // 你可以使用 EventBusSubscriber 自动注册类中所有标注了 @SubscribeEvent 的静态方法
@@ -82,9 +90,57 @@ public class RegionDifficulty
         @SubscribeEvent
         public static void onClientSetup(FMLClientSetupEvent event)
         {
-            // 一些客户端设置代码
-            LOGGER.info("来自客户端设置——你好");
-            LOGGER.info("Minecraft 名称 >> {}", Minecraft.getInstance().getUser().getName());
+
+        }
+    }
+
+    /**
+     * 客户端 FORGE 事件 —— 难度指示器 HUD 渲染和定时请求。
+     */
+    @Mod.EventBusSubscriber(modid = MODID, value = Dist.CLIENT)
+    public static class ClientForgeEvents
+    {
+        private static String lastDim = "";
+
+        @SubscribeEvent
+        public static void onClientTick(TickEvent.ClientTickEvent event) {
+            if (event.phase != TickEvent.Phase.END) return;
+            Minecraft mc = Minecraft.getInstance();
+            if (mc.player == null || mc.level == null) return;
+
+            boolean holding = mc.player.getMainHandItem().getItem() instanceof DifficultyIndicatorItem
+                           || mc.player.getOffhandItem().getItem() instanceof DifficultyIndicatorItem;
+
+            if (!holding) {
+                ClientDifficultyCache.invalidate();
+                lastDim = "";
+                return;
+            }
+
+            // 维度变化时立即请求
+            String curDim = mc.player.level().dimension().location().toString();
+            boolean dimChanged = !curDim.equals(lastDim);
+            if (dimChanged) {
+                lastDim = curDim;
+            }
+
+            // 每 20 tick 或维度变化时发送请求
+            if (dimChanged || mc.player.tickCount % 20 == 0) {
+                NetworkHandler.sendToServer(new RequestDifficultyPacket());
+            }
+        }
+
+        @SubscribeEvent
+        public static void onRenderOverlay(RenderGuiOverlayEvent.Post event) {
+            // 仅在 CHAT_PANEL 类型渲染一次，避免每帧多次绘制
+            if (event.getOverlay() != VanillaGuiOverlay.CHAT_PANEL.type()) return;
+            DifficultyHudOverlay.render(event.getGuiGraphics(), event.getPartialTick());
+        }
+
+        @SubscribeEvent
+        public static void onLogout(ClientPlayerNetworkEvent.LoggingOut event) {
+            ClientDifficultyCache.invalidate();
+            lastDim = "";
         }
     }
 }

@@ -45,7 +45,7 @@ public class DifficultyCalculator {
                                             DifficultyMultipliers multipliers) {
         // 缓存保存 维度 × 生物群系 × 结构。深度计算代价低（线性插值），且随Y坐标变化。
         float nonDepth = CACHE.getOrCompute(level, pos, multipliers);
-        float depthMult = multipliers.getDepthMultiplier(pos.getY());
+        float depthMult = multipliers.getDepthMultiplier(level.getLevel().dimension(), pos.getY());
         float combined = nonDepth * depthMult;
 
         if (LOGGER.isDebugEnabled()) {

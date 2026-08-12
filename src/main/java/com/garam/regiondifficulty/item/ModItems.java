@@ -10,8 +10,8 @@ import net.minecraftforge.registries.RegistryObject;
 public class ModItems {
     public static final DeferredRegister<Item> ITEMS=
             DeferredRegister.create(ForgeRegistries.ITEMS, RegionDifficulty.MODID);
-    public static final RegistryObject<Item> EX_ITEM= ITEMS.register("ex_item",
-            () ->new Item(new Item.Properties()));
+    public static final RegistryObject<Item> DIFFICULTY_INDICATOR= ITEMS.register("difficulty_indicator",
+            () -> new DifficultyIndicatorItem(new Item.Properties().stacksTo(1)));
     public static void register(IEventBus eventBus){
         ITEMS.register(eventBus);
     }
